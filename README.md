@@ -5,23 +5,6 @@ This project is a **deep learning-based Pneumonia detection system** that analyz
 
 ---
 
-## 📂 Project Structure
-```
-Pneumonia-Detector/
-│── data/                     # Store X-ray images dataset
-│── models/                   # Saved trained models
-│── notebooks/                # Jupyter notebooks for training & evaluation
-│── src/                      # Source code for model training and prediction
-│   ├── train.py              # Script to train the model
-│   ├── predict.py            # Script to make predictions on new images
-│   ├── preprocess.py         # Image preprocessing functions
-│── app/                      # Flask or Streamlit app for user-friendly interface
-│── README.md                 # Documentation
-│── requirements.txt           # Dependencies
-```
-
----
-
 ## 🔧 Installation & Setup
 ### 1️⃣ Clone the Repository
 ```sh
