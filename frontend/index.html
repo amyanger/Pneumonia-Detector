@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pneumonia Detector - AI Medical Imaging</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-lungs"></i>
+                    <h1>Pneumonia Detector</h1>
+                </div>
+                <p class="subtitle">AI-Powered Chest X-Ray Analysis</p>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <h2>Upload Chest X-Ray Image</h2>
+                    <p>Drag & drop your X-ray image here or click to browse</p>
+                    <input type="file" id="fileInput" accept="image/*" hidden>
+                    <button class="upload-btn" id="uploadBtn">
+                        <i class="fas fa-folder-open"></i>
+                        Choose File
+                    </button>
+                </div>
+            </div>
+
+            <div class="preview-section" id="previewSection" style="display: none;">
+                <div class="image-preview">
+                    <img id="previewImage" alt="X-ray preview">
+                    <div class="image-info">
+                        <h3>Selected Image</h3>
+                        <p id="fileName"></p>
+                        <button class="analyze-btn" id="analyzeBtn">
+                            <i class="fas fa-microscope"></i>
+                            Analyze X-Ray
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="loading-section" id="loadingSection" style="display: none;">
+                <div class="loading-animation">
+                    <div class="spinner"></div>
+                    <h3>Analyzing X-Ray...</h3>
+                    <p>Our AI is examining the chest X-ray for signs of pneumonia</p>
+                </div>
+            </div>
+
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <div class="result-card">
+                    <div class="result-header">
+                        <div class="result-icon" id="resultIcon">
+                            <i class="fas fa-heartbeat"></i>
+                        </div>
+                        <div class="result-info">
+                            <h2 id="resultTitle">Analysis Complete</h2>
+                            <p class="result-status" id="resultStatus"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="confidence-meter">
+                        <div class="confidence-label">
+                            <span>Confidence Level</span>
+                            <span id="confidenceValue"></span>
+                        </div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" id="confidenceFill"></div>
+                        </div>
+                    </div>
+
+                    <div class="result-details">
+                        <div class="detail-item">
+                            <i class="fas fa-info-circle"></i>
+                            <div>
+                                <h4>Recommendation</h4>
+                                <p id="recommendation"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn-secondary" id="newAnalysisBtn">
+                            <i class="fas fa-plus"></i>
+                            New Analysis
+                        </button>
+                        <button class="btn-primary" id="downloadBtn">
+                            <i class="fas fa-download"></i>
+                            Download Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="disclaimer">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p><strong>Medical Disclaimer:</strong> This tool is for educational purposes only. Always consult with a qualified healthcare professional for medical diagnosis and treatment.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
