@@ -72,6 +72,10 @@ Pull requests are welcome! If you find any issues, feel free to open an issue on
 
 ---
 
-## 📜 License
-This project is open-source and available under the **MIT License**.
+## 👤 Author
 
+Arjun Myanger - [GitHub](https://github.com/amyanger)
+
+## 📜 License
+
+This project is open-source and available under the **MIT License**.
