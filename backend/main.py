@@ -8,6 +8,8 @@ import numpy as np
 import tensorflow as tf
 import cv2
 
+from image_checks import rejection_reason
+
 logger = logging.getLogger(__name__)
 
 MODEL_PATH = Path(__file__).parent / "pneumonia_detector_model.keras"
@@ -28,10 +30,12 @@ app.add_middleware(
 model = tf.keras.models.load_model(MODEL_PATH)
 
 
-def preprocess_image(data):
-    img = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_GRAYSCALE)
-    if img is None:
-        return None
+def decode_image(data):
+    return cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
+
+
+def preprocess_image(img):
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     img = cv2.resize(img, (224, 224))
     img = img / 255.0
     img = np.expand_dims(img, axis=-1)  # Add channel dimension for CNN
@@ -52,14 +56,22 @@ def predict(file: UploadFile = File(...)):
     if len(data) > MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=413, detail="File too large. Maximum size is 10 MB.")
 
-    img = preprocess_image(data) if data else None
+    img = decode_image(data) if data else None
     if img is None:
         raise HTTPException(
             status_code=400, detail="Could not read image. Please upload a JPG or PNG file."
         )
 
+    reason = rejection_reason(img)
+    if reason:
+        logger.info("Rejected upload as not a chest X-ray (%s)", reason)
+        raise HTTPException(
+            status_code=400,
+            detail="This doesn't look like a chest X-ray. Please upload a frontal chest X-ray image.",
+        )
+
     try:
-        probability = float(model.predict(img, verbose=0)[0][0])
+        probability = float(model.predict(preprocess_image(img), verbose=0)[0][0])
     except Exception:
         logger.exception("Prediction failed")
         raise HTTPException(status_code=500, detail="Prediction failed.")

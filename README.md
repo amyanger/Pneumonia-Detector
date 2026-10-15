@@ -10,6 +10,7 @@ This is an educational project. It is not a medical device and should not be use
 Pneumonia-Detector/
 ├── backend/
 │   ├── main.py                          FastAPI app
+│   ├── image_checks.py                  rejects uploads that are clearly not X-rays
 │   └── pneumonia_detector_model.keras   trained model (tracked in git)
 ├── frontend/
 │   ├── index.html
@@ -17,7 +18,9 @@ Pneumonia-Detector/
 │   └── styles.css
 ├── tests/
 │   ├── conftest.py
-│   └── test_api.py                      API tests
+│   ├── images.py                        synthetic test images
+│   ├── test_api.py                      API tests
+│   └── test_image_checks.py             tests for the X-ray checks
 ├── extract_data.py                      unzip the Kaggle dataset
 ├── load_images.py                       show one sample image per class
 ├── preprocess_data.py                   build train/validation arrays
@@ -117,8 +120,19 @@ Response:
 Errors return a JSON body of the form `{"detail": "..."}`:
 
 - 400 if the file is empty or cannot be decoded as an image
+- 400 if the image is clearly not a chest X-ray (see below)
 - 413 if the file is larger than 10 MB
 - 500 if the model fails during prediction
+
+### Rejecting non-X-ray images
+
+The model gives a confident answer for any input, so before predicting, the backend runs three quick checks in `backend/image_checks.py` and rejects images that are:
+
+- nearly blank (very little contrast)
+- noisy (neighbouring pixels jump around far more than in a real X-ray)
+- clearly multicoloured (a tinted X-ray, such as a photo of film on a lightbox, still passes)
+
+The cutoffs were set on 33 public chest X-rays from Wikimedia Commons, all of which pass, plus noise, blank images and colour photos. Random noise and blank images are always rejected, and about 60% of the colour photos tried were. Muted or black and white photos and X-rays of other body parts still get through.
 
 ## Running tests
 
@@ -127,12 +141,12 @@ pip install -r requirements-dev.txt
 pytest tests -q
 ```
 
-The six tests exercise the API with the real bundled model, so TensorFlow has to be installed.
+The API tests use the real bundled model, so TensorFlow has to be installed. Test images are generated synthetically, so no dataset is needed.
 
 ## Limitations
 
 - No accuracy figures are published here. The bundled model has not been measured on the test set in this repo. Run `evaluate_model.py` to get real numbers.
-- The model has no way to tell whether an image is a chest X-ray at all. It will give a confident answer for anything you upload. Random noise, for example, comes back as pneumonia with about 0.99 confidence.
+- The model itself has no idea whether an image is a chest X-ray. The checks above stop obvious junk like noise, blank images and colourful photos, but a grayscale photo or an X-ray of another body part will still get a confident answer. Catching those would need a learned check fitted on the training data.
 - The Kaggle dataset contains only pediatric chest X-rays from a single source, Guangzhou Women and Children's Medical Center. Results on adults or on images from other hospitals and equipment are not reliable.
 
 ## Author

@@ -1,19 +1,14 @@
-import cv2
-import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
+from images import encode_png, noise, xray_like
 from main import MAX_UPLOAD_BYTES, app
 
 client = TestClient(app)
 
 
-def make_png(size=(256, 256)):
-    rng = np.random.default_rng(0)
-    img = rng.integers(0, 256, size=size, dtype=np.uint8)
-    ok, buf = cv2.imencode(".png", img)
-    assert ok
-    return buf.tobytes()
+def make_png():
+    return encode_png(xray_like())
 
 
 def post_file(data, name="xray.png", content_type="image/png"):
@@ -66,3 +61,11 @@ def test_predict_ignores_traversal_filename(tmp_path, monkeypatch):
     r = post_file(make_png(), name="../../evil.png")
     assert r.status_code == 200
     assert list(tmp_path.iterdir()) == []
+
+
+def test_predict_rejects_noise():
+    r = post_file(encode_png(noise()))
+    assert r.status_code == 400
+    assert r.json() == {
+        "detail": "This doesn't look like a chest X-ray. Please upload a frontal chest X-ray image."
+    }
