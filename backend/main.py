@@ -1,30 +1,35 @@
-from fastapi import FastAPI, File, UploadFile
-from fastapi.middleware.cors import CORSMiddleware  # ✅ Import CORS Middleware
+import logging
+from pathlib import Path
+
+from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import numpy as np
 import tensorflow as tf
 import cv2
-import os
 
-# ✅ Initialize FastAPI app
+logger = logging.getLogger(__name__)
+
+MODEL_PATH = Path(__file__).parent / "pneumonia_detector_model.keras"
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+
 app = FastAPI()
 
-# ✅ Enable CORS for frontend communication
+# Origins stay "*" because the frontend is often opened via file:// (origin "null").
+# No cookies or auth are used, so credentials are disabled.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Change "*" to ["http://localhost:3000"] for more security
-    allow_credentials=True,
-    allow_methods=["*"],  # Allows all HTTP methods
-    allow_headers=["*"],  # Allows all headers
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
 )
 
-# ✅ Load the trained model
-model = tf.keras.models.load_model("pneumonia_detector_model.keras")
+model = tf.keras.models.load_model(MODEL_PATH)
 
 
-# ✅ Function to preprocess the uploaded image
-def preprocess_image(image_path):
-    img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+def preprocess_image(data):
+    img = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_GRAYSCALE)
     if img is None:
         return None
     img = cv2.resize(img, (224, 224))
@@ -34,29 +39,38 @@ def preprocess_image(image_path):
     return img
 
 
-# ✅ Endpoint to receive and predict uploaded image
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
+# Sync route on purpose: FastAPI runs it in a threadpool so model.predict
+# does not block the event loop.
 @app.post("/predict/")
-async def predict(file: UploadFile = File(...)):
+def predict(file: UploadFile = File(...)):
+    data = file.file.read(MAX_UPLOAD_BYTES + 1)
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="File too large. Maximum size is 10 MB.")
+
+    img = preprocess_image(data) if data else None
+    if img is None:
+        raise HTTPException(
+            status_code=400, detail="Could not read image. Please upload a JPG or PNG file."
+        )
+
     try:
-        file_path = f"temp_{file.filename}"
+        probability = float(model.predict(img, verbose=0)[0][0])
+    except Exception:
+        logger.exception("Prediction failed")
+        raise HTTPException(status_code=500, detail="Prediction failed.")
 
-        with open(file_path, "wb") as buffer:
-            buffer.write(await file.read())
-
-        img = preprocess_image(file_path)
-        if img is None:
-            return {"error": "Invalid image format"}
-
-        prediction = model.predict(img)[0][0]
-        os.remove(file_path)
-
-        result = "Pneumonia Detected" if prediction > 0.5 else "Normal Lung"
-        return {"prediction": result, "confidence": float(prediction)}
-
-    except Exception as e:
-        return {"error": str(e)}
+    is_pneumonia = probability > 0.5
+    return {
+        "prediction": "Pneumonia Detected" if is_pneumonia else "Normal Lung",
+        "confidence": probability if is_pneumonia else 1 - probability,
+        "pneumonia_probability": probability,
+    }
 
 
-# ✅ Run the FastAPI server
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000)
