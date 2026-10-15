@@ -1,3 +1,4 @@
+import io
 import logging
 from pathlib import Path
 
@@ -7,6 +8,7 @@ import uvicorn
 import numpy as np
 import tensorflow as tf
 import cv2
+from PIL import Image, UnidentifiedImageError
 
 from image_checks import rejection_reason
 
@@ -14,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 MODEL_PATH = Path(__file__).parent / "pneumonia_detector_model.keras"
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+MAX_PIXELS = 50_000_000
 
 app = FastAPI()
 
@@ -28,6 +31,18 @@ app.add_middleware(
 )
 
 model = tf.keras.models.load_model(MODEL_PATH)
+
+
+def image_pixels(data):
+    """Width x height from the file header, without decoding the pixels. None if unreadable."""
+    try:
+        with Image.open(io.BytesIO(data)) as im:
+            width, height = im.size
+    except Image.DecompressionBombError:
+        return float("inf")
+    except (UnidentifiedImageError, OSError, ValueError):
+        return None
+    return width * height
 
 
 def decode_image(data):
@@ -56,7 +71,14 @@ def predict(file: UploadFile = File(...)):
     if len(data) > MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=413, detail="File too large. Maximum size is 10 MB.")
 
-    img = decode_image(data) if data else None
+    # A small compressed file can decode to a huge image, so check dimensions first.
+    pixels = image_pixels(data) if data else None
+    if pixels is not None and pixels > MAX_PIXELS:
+        raise HTTPException(
+            status_code=413, detail="Image is too large. Maximum size is 50 megapixels."
+        )
+
+    img = decode_image(data) if pixels else None
     if img is None:
         raise HTTPException(
             status_code=400, detail="Could not read image. Please upload a JPG or PNG file."

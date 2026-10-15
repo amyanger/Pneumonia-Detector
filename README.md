@@ -121,7 +121,7 @@ Errors return a JSON body of the form `{"detail": "..."}`:
 
 - 400 if the file is empty or cannot be decoded as an image
 - 400 if the image is clearly not a chest X-ray (see below)
-- 413 if the file is larger than 10 MB
+- 413 if the file is larger than 10 MB, or the image is larger than 50 megapixels
 - 500 if the model fails during prediction
 
 ### Rejecting non-X-ray images

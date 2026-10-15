@@ -1,3 +1,7 @@
+import struct
+import zlib
+
+import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
@@ -69,3 +73,23 @@ def test_predict_rejects_noise():
     assert r.json() == {
         "detail": "This doesn't look like a chest X-ray. Please upload a frontal chest X-ray image."
     }
+
+
+def test_predict_rejects_huge_dimensions_in_small_file():
+    # A blank 8000x8000 PNG is tiny on disk but 64 megapixels once decoded.
+    data = encode_png(np.zeros((8000, 8000), np.uint8))
+    assert len(data) < MAX_UPLOAD_BYTES
+    r = post_file(data)
+    assert r.status_code == 413
+    assert r.json() == {"detail": "Image is too large. Maximum size is 50 megapixels."}
+
+
+def test_predict_rejects_header_claiming_enormous_image():
+    # Only the PNG header: claims 20000x20000 pixels with no real pixel data.
+    def chunk(kind, body):
+        return struct.pack(">I", len(body)) + kind + body + struct.pack(">I", zlib.crc32(kind + body))
+
+    header = struct.pack(">IIBBBBB", 20000, 20000, 8, 0, 0, 0, 0)
+    data = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", header) + chunk(b"IEND", b"")
+    r = post_file(data)
+    assert r.status_code == 413
