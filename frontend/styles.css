@@ -59,6 +59,38 @@ body {
     font-weight: 300;
 }
 
+/* Notice and Error Banners */
+.notice-banner {
+    background: #f8d7da;
+    color: #721c24;
+    border-radius: 15px;
+    padding: 15px 20px;
+    margin: -20px auto 20px;
+    max-width: 800px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.notice-banner + .notice-banner {
+    margin-top: 0;
+}
+
+.notice-banner span {
+    flex: 1;
+}
+
+.notice-dismiss {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 4px;
+}
+
 /* Main Content */
 .main-content {
     flex: 1;
@@ -81,7 +113,8 @@ body {
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    min-width: 500px;
+    width: 100%;
+    max-width: 600px;
 }
 
 .upload-area:hover {
@@ -155,7 +188,7 @@ body {
     max-height: 300px;
     border-radius: 15px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    object-fit: cover;
+    object-fit: contain;
 }
 
 .image-info h3 {
@@ -183,9 +216,14 @@ body {
     gap: 10px;
 }
 
-.analyze-btn:hover {
+.analyze-btn:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 10px 25px rgba(39, 174, 96, 0.3);
+}
+
+.analyze-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 /* Loading Section */
@@ -322,6 +360,12 @@ body {
     background: linear-gradient(45deg, #e74c3c, #c0392b);
 }
 
+.probability-note {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    color: #7f8c8d;
+}
+
 /* Result Details */
 .result-details {
     margin-bottom: 30px;
@@ -417,7 +461,6 @@ body {
     }
     
     .upload-area {
-        min-width: auto;
         padding: 40px 20px;
     }
     
