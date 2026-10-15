@@ -2,6 +2,7 @@
 dataset/
 *.npy
 *.h5
+*.zip
 
 # Python
 __pycache__/
@@ -25,6 +26,14 @@ ENV/
 # Jupyter
 .ipynb_checkpoints/
 
+# Testing
+.pytest_cache/
+
 # Model files
 *.keras
 *.pkl
+# The bundled model is tracked so the app runs without retraining
+!backend/pneumonia_detector_model.keras
+
+# Local agent instructions
+CLAUDE.md

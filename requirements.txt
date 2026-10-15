@@ -1,18 +1,23 @@
+# Pins are exact on purpose. The bundled model was saved with Keras 3.8 and
+# fails to load on Keras >= 3.11, and TensorFlow 2.21 requires Keras >= 3.12,
+# so TensorFlow stays on 2.20.0. Requires Python 3.13 (TensorFlow does not
+# support 3.14).
+
 # Web framework
-fastapi>=0.104.0
-uvicorn>=0.24.0
-python-multipart>=0.0.6
+fastapi==0.143.2
+uvicorn==0.54.0
+python-multipart==0.0.32
 
 # Machine learning
-tensorflow>=2.15.0
-scikit-learn>=1.3.0
+tensorflow==2.20.0
+keras==3.10.0
+scikit-learn==1.9.1
 
 # Image processing
-opencv-python>=4.8.0
-Pillow>=10.0.0
+opencv-python==5.0.0.93
 
 # Data handling
-numpy>=1.24.0
+numpy==2.5.4
 
 # Visualization
-matplotlib>=3.8.0
+matplotlib==3.11.2
