@@ -151,7 +151,7 @@ The API tests use the real bundled model, so TensorFlow has to be installed. Tes
 
 ## Author
 
-Arjun Myanger - [GitHub](https://github.com/amyanger)
+amyanger - [GitHub](https://github.com/amyanger)
 
 ## License
 
